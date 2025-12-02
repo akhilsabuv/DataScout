@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "StrongMySQLRoot!23" # change to a secure password
+      MYSQL_DATABASE: "appdb" # optional: create on startup
+      MYSQL_USER: "appuser" # optional: non-root user
+      MYSQL_PASSWORD: "AppUserPass!23" # optional: password for above user
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306" # map host 3306 -> container 3306 (change host side if conflict)
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8080:80" # access phpMyAdmin at http://localhost:8080
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432" # map host 5433 -> container 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  mysql_data:
+  postgres_data:

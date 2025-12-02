@@ -1,0 +1,54 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.venv
+env/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node.js / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+npm-debug.log
+yarn-error.log
+.sass-cache/
+connect.lock
+package-lock.json
+# Keep package-lock.json usually, but sometimes people ignore it. I will NOT ignore package-lock.json by default as it is best practice to commit it.
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# OS Generated
+Icon?
+ehthumbs.db
+Thumbs.db

@@ -1,0 +1,177 @@
+<div class="schema-viewer-container">
+    <div class="viewer-header">
+        <div class="brand-logo mb-3">
+            <div class="logo-circle-small">
+                <img src="assets/logo.svg" alt="DataScout Logo" style="width: 60%; height: 60%;">
+            </div>
+            <span class="brand-text">DataScout</span>
+        </div>
+        <h2>Schema Explorer</h2>
+        <p class="text-muted">Manage field descriptions and lock sensitive data.</p>
+        <div *ngIf="dbType" class="db-connection-pill animate-in">
+            <div class="db-icon-wrapper">
+                <i class="bi bi-database-fill"></i>
+            </div>
+            <div class="db-info-content">
+                <span class="db-label">Connected to</span>
+                <div class="db-details">
+                    <span class="db-type">{{ dbType }}</span>
+                    <span class="db-separator">•</span>
+                    <span class="db-name">{{ dbName }}</span>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <span class="pulse-dot"></span>
+                <span class="status-text">Active</span>
+            </div>
+            <button class="btn btn-link text-danger ms-3 p-0" (click)="deleteConnection()" title="Delete Connection">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingTables" class="text-center p-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading schema...</p>
+    </div>
+
+    <!-- Table List -->
+    <div *ngIf="!loadingTables" class="table-list">
+        <div *ngFor="let table of tables" class="table-card">
+
+            <!-- Table Header (Expandable) -->
+            <div class="table-header" (click)="toggleTable(table)" [class.expanded]="table.isExpanded">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-table me-2 table-icon"></i>
+                    <span class="table-name">&nbsp;&nbsp;{{ table.name }}</span>
+                </div>
+                <i class="bi bi-chevron-down expand-icon" [class.rotated]="table.isExpanded"></i>
+            </div>
+
+            <!-- Columns Content -->
+            <div class="table-content" *ngIf="table.isExpanded">
+
+                <!-- Table Context / Prompt Input -->
+                <div class="table-context-section">
+                    <label class="context-label">
+                        <i class="bi bi-chat-square-text me-2"></i>Table Context & Relationships
+                    </label>
+                    <div class="context-input-wrapper">
+                        <textarea class="form-control context-input" [(ngModel)]="table.context"
+                            placeholder="Describe what this table represents, its relationships with other tables, or any specific equations/logic relevant to this data..."
+                            rows="3"></textarea>
+                        <button class="btn btn-primary context-save-btn" (click)="saveTableContext(table)"
+                            [disabled]="getTableSaveState(table) === 'saving'">
+                            <span *ngIf="getTableSaveState(table) === 'idle'">Save Context</span>
+                            <span *ngIf="getTableSaveState(table) === 'saving'">
+                                <span class="spinner-border spinner-border-sm me-1" role="status"
+                                    aria-hidden="true"></span>
+                                Saving...
+                            </span>
+                            <span *ngIf="getTableSaveState(table) === 'saved'"><i
+                                    class="bi bi-check me-1"></i>Saved</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Columns -->
+                <div *ngIf="loadingColumns[table.name]" class="text-center p-4">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                    <span class="ms-2 small text-muted">Fetching columns...</span>
+                </div>
+
+                <!-- Column List -->
+                <div *ngIf="!loadingColumns[table.name] && columnsCache[table.name]" class="column-list">
+                    <div *ngFor="let col of columnsCache[table.name]" class="column-row" [class.locked]="col.isLocked">
+
+                        <!-- Column Info -->
+                        <div class="col-info">
+                            <div class="col-name">
+                                <i class="bi bi-key-fill text-warning me-1" *ngIf="col.name === 'id'"></i>
+                                {{ col.name }}
+                            </div>
+                            <div class="col-type">{{ col.type }}</div>
+                        </div>
+
+                        <!-- Description Editor -->
+                        <div class="col-desc">
+                            <div class="input-group input-group-sm">
+                                <textarea class="form-control desc-input" [(ngModel)]="col.description"
+                                    [disabled]="col.isLocked" placeholder="Add description..." rows="2"></textarea>
+                                <button class="btn btn-outline-primary save-btn" (click)="saveDescription(table, col)"
+                                    [disabled]="col.isLocked || getSaveState(table, col) === 'saving'">
+
+                                    <span *ngIf="getSaveState(table, col) === 'idle'">Save</span>
+                                    <span *ngIf="getSaveState(table, col) === 'saving'">
+                                        <span class="spinner-border spinner-border-sm" role="status"
+                                            aria-hidden="true"></span>
+                                    </span>
+                                    <span *ngIf="getSaveState(table, col) === 'saved'"><i
+                                            class="bi bi-check"></i></span>
+                                </button>
+                            </div>
+                            <div class="save-status" *ngIf="getSaveState(table, col) === 'saved'">Saved!</div>
+                        </div>
+
+                        <!-- Lock Toggle -->
+                        <div class="col-actions">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                    [id]="'lock-' + table.name + '-' + col.name" [checked]="col.isLocked"
+                                    (change)="toggleLock(table, col)">
+                                <label class="form-check-label small" [for]="'lock-' + table.name + '-' + col.name">
+                                    <i class="bi" [class.bi-lock-fill]="col.isLocked"
+                                        [class.bi-unlock]="!col.isLocked"></i>
+                                    <span class="d-none d-md-inline ms-1">{{ col.isLocked ? 'Locked' : 'Unlocked'
+                                        }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Schema Context -->
+    <div class="global-context-section mt-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-globe2 me-2 text-primary"></i>Global Schema Notes
+                </h5>
+                <p class="text-muted small mb-3">
+                    Provide high-level context about the entire database schema. This helps the AI understand the
+                    overall purpose, domain-specific terminology, and key relationships that span multiple tables.
+                </p>
+                <div class="context-input-wrapper">
+                    <textarea class="form-control context-input global-input" [(ngModel)]="globalContext"
+                        placeholder="E.g., This database manages a multi-tenant SaaS application for inventory management. Key entities are Tenants, Users, and Products..."
+                        rows="4"></textarea>
+                    <button class="btn btn-primary context-save-btn mt-3" (click)="saveGlobalContext()"
+                        [disabled]="globalContextSaveState === 'saving'">
+                        <span *ngIf="globalContextSaveState === 'idle'">Save Global Context</span>
+                        <span *ngIf="globalContextSaveState === 'saving'">
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Saving...
+                        </span>
+                        <span *ngIf="globalContextSaveState === 'saved'"><i class="bi bi-check me-1"></i>Saved</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connect with Agent Action -->
+    <div class="text-center mt-5 mb-5">
+        <button class="btn-connect-agent" (click)="connectToAgent()">
+            <i class="bi bi-robot me-2"></i>
+            &nbsp;Connect with Agent
+        </button>
+    </div>
+</div>

@@ -1,0 +1,150 @@
+<div class="split-screen-container">
+    <!-- Left Side - Gradient Background with Branding -->
+    <div class="left-panel">
+        <div class="background-image"></div>
+        <div class="gradient-overlay"></div>
+        <div class="branding-content">
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <img src="assets/logo.svg" alt="DataScout Logo" style="width: 60%; height: 60%;">
+                </div>
+            </div>
+            <h1 class="brand-title">DataScout</h1>
+            <p class="brand-subtitle">Enterprise SQL Intelligence Platform</p>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Privacy-First Architecture</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-lightning-charge"></i>
+                    <span>Powered by Gemini AI</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-database-gear"></i>
+                    <span>Multi-Database Support</span>
+                </div>
+            </div>
+        </div>
+        <div class="decorative-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+        </div>
+    </div>
+
+    <!-- Right Side - Form -->
+    <div class="right-panel">
+        <div class="form-container">
+            <div class="form-header">
+                <h2 class="form-title">Connect Database</h2>
+                <p class="form-description">Select your database type and enter connection details</p>
+            </div>
+
+            <!-- Database Type Selector -->
+            <div class="db-type-selector">
+                <div class="selector-label">Database Type</div>
+                <div class="type-pills">
+                    <div class="type-pill" [class.active]="selectedDb === 'sqlite'" (click)="selectedDb = 'sqlite'">
+                        <i class="bi bi-file-earmark-binary"></i>
+                        <span>SQLite</span>
+                    </div>
+                    <div class="type-pill" [class.active]="selectedDb === 'mssql'" (click)="selectedDb = 'mssql'">
+                        <i class="bi bi-server"></i>
+                        <span>MSSQL</span>
+                    </div>
+                    <div class="type-pill" [class.active]="selectedDb === 'postgresql'"
+                        (click)="selectedDb = 'postgresql'">
+                        <i class="bi bi-database"></i>
+                        <span>PostgreSQL</span>
+                    </div>
+                    <div class="type-pill" [class.active]="selectedDb === 'mysql'" (click)="selectedDb = 'mysql'">
+                        <i class="bi bi-hdd-stack"></i>
+                        <span>MySQL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQLite Form -->
+            <div *ngIf="selectedDb === 'sqlite'" class="form-fields animate-in">
+                <div class="input-group-custom">
+                    <label class="input-label">Database File</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="file-input" id="sqliteFile" (change)="onFileSelected($event)"
+                            accept=".db,.sqlite,.sqlite3">
+                        <label for="sqliteFile" class="file-label">
+                            <i class="bi bi-file-earmark-arrow-up me-2"></i>
+                            <span>{{ sqliteFile ? sqliteFile.name : 'Choose File' }}</span>
+                        </label>
+                    </div>
+                    <div class="input-hint">Supported: .db, .sqlite, .sqlite3</div>
+                </div>
+            </div>
+
+            <!-- MSSQL / PostgreSQL / MySQL Form -->
+            <div *ngIf="selectedDb === 'mssql' || selectedDb === 'postgresql' || selectedDb === 'mysql'"
+                class="form-fields animate-in">
+                <div class="input-group-custom">
+                    <label class="input-label">Host Address</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-hdd-network input-icon"></i>
+                        <input type="text" class="styled-input" [(ngModel)]="host" placeholder="localhost">
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label">Port Number</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-plugin input-icon"></i>
+                        <input type="text" class="styled-input" [(ngModel)]="port" [placeholder]="getPortPlaceholder()">
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label">Database Name</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-database-fill input-icon"></i>
+                        <input type="text" class="styled-input" [(ngModel)]="dbName" placeholder="my_database">
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label">Username</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-person-fill input-icon"></i>
+                        <input type="text" class="styled-input" [(ngModel)]="username" placeholder="Enter username">
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <label class="input-label">Password</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-lock-fill input-icon"></i>
+                        <input [type]="showPassword ? 'text' : 'password'" class="styled-input" [(ngModel)]="password"
+                            placeholder="Enter password">
+                        <i class="bi" [class.bi-eye-fill]="!showPassword" [class.bi-eye-slash-fill]="showPassword"
+                            (click)="togglePasswordVisibility()"
+                            style="position: absolute; right: 15px; cursor: pointer; color: black;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connect Button -->
+            <button class="connect-button" (click)="onConnect()" [disabled]="isLoading">
+                <span *ngIf="!isLoading">Connect to Database</span>
+                <span *ngIf="isLoading">Connecting...</span>
+                <i *ngIf="!isLoading" class="bi bi-arrow-right ms-2"></i>
+                <div *ngIf="isLoading" class="spinner-border spinner-border-sm ms-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </button>
+
+            <div class="form-footer">
+                <p class="footer-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Your credentials are never stored or shared
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

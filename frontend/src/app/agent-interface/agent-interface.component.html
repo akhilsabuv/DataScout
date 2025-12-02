@@ -1,0 +1,78 @@
+<div class="agent-container">
+    <!-- Left Side: Chat Interface -->
+    <div class="chat-section">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/logo.svg" alt="Logo" style="width: 30px; height: 30px;">
+                <h2>Data Assistant</h2>
+            </div>
+            <span class="status-badge">Online</span>
+        </div>
+
+        <div class="messages-area">
+            <div *ngFor="let msg of messages"
+                [ngClass]="{'message-wrapper': true, 'user-msg': msg.role === 'user', 'agent-msg': msg.role === 'agent'}">
+                <div class="avatar" *ngIf="msg.role === 'agent'">
+                    <span class="material-icons">smart_toy</span>
+                </div>
+                <div class="message-bubble">
+                    <ng-container [ngSwitch]="msg.type">
+                        <div *ngSwitchCase="'table'" class="table-container">
+                            <p class="message-content">{{ msg.content }}</p>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th *ngFor="let col of msg.data.columns">{{ col }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let row of msg.data.rows">
+                                        <td *ngFor="let cell of row">{{ cell }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div *ngSwitchDefault class="message-content">{{ msg.content }}</div>
+                    </ng-container>
+                    <div class="message-time">{{ msg.timestamp | date:'shortTime' }}</div>
+                </div>
+                <div class="avatar" *ngIf="msg.role === 'user'">
+                    <span class="material-icons">person</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" [(ngModel)]="userInput" (keyup.enter)="sendMessage()"
+                    placeholder="Ask about your business...">
+                <button (click)="sendMessage()" [disabled]="!userInput.trim()">
+                    <span class="material-icons">send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: SQL History -->
+    <div class="history-section">
+        <div class="history-header">
+            <h2>SQL History</h2>
+            <span class="history-count">{{ sqlHistory.length }} queries</span>
+        </div>
+
+        <div class="history-list">
+            <div *ngFor="let item of sqlHistory" class="history-item">
+                <div class="history-meta">
+                    <span class="timestamp">{{ item.timestamp | date:'mediumTime' }}</span>
+                    <span class="status" [class.success]="item.status === 'success'"
+                        [class.error]="item.status === 'error'" [class.blocked]="item.status === 'blocked'">
+                        {{ item.status }}
+                    </span>
+                </div>
+                <div class="code-block">
+                    <code>{{ item.query }}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
